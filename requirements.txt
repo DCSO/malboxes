@@ -1,0 +1,5 @@
+appdirs
+Jinja2>=2.9
+jsmin
+requests
+tqdm

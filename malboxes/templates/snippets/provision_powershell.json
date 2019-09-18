@@ -1,0 +1,63 @@
+{
+    "type": "powershell",
+    "elevated_user": "{{ username }}",
+    "elevated_password": "{{ password }}",
+    "scripts": [
+        "{{ dir }}/scripts/windows/installchoco.ps1"
+    ],
+    "valid_exit_codes": [ 0, 5888 ]
+},
+{
+    "type": "windows-restart"
+},
+{
+    "type": "powershell",
+    "scripts": [
+        {% if not windows_updates == "true" %}"{{ dir }}/scripts/windows/disable_auto-updates.ps1",{% endif %}
+        {% if not windows_defender == "true" %}"{{ dir }}/scripts/windows/disable_defender.ps1",{% endif %}
+        {% if not windows_firewall == "true" %}"{{ dir }}/scripts/windows/disable_firewall.ps1",{% endif %}
+        {% if windows_testsigning == "true" %}"{{ dir }}/scripts/windows/enable_testsigning.ps1",{% endif %}
+        {% if hypervisor == "virtualbox" and guestadditions == "true"%}
+            "{{ dir }}/scripts/windows/vmtools.ps1",
+        {% endif %}
+        {% if ida_path is defined %}"{{ dir }}/scripts/windows/malware_analysis.ps1", {% endif %}
+        "{{ dir }}/scripts/windows/comma-dummy.ps1"
+    ]
+},
+{
+    "type": "powershell",
+    "inline": [
+        "choco install {{ choco_packages }} -y"
+    ],
+    "valid_exit_codes": [ 0, 404 ]
+},
+{
+    "type": "powershell",
+    "environment_vars": [
+      "WIDTH={{ screen_width }}",
+      "HEIGHT={{ screen_height }}"
+    ],
+    "script": "{{ dir }}/scripts/windows/set_resolution.ps1"
+},
+{% if onstartup_script %}
+    {% for onstart_cmd_list in onstartup_script %}
+        {% for cmd in onstart_cmd_list %}
+            {{ cmd | tojson}},
+        {% endfor %}
+    {% endfor %}
+
+{% endif %}
+
+{% if profile is defined %}
+{
+    "type": "powershell",
+    "scripts": [
+        "{{ cache_dir }}/profile-{{ profile }}.ps1"
+    ]
+},
+{% endif %}
+
+{
+    "type": "windows-restart"
+}
+

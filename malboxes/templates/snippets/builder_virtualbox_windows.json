@@ -1,0 +1,34 @@
+		"type": "virtualbox-iso",
+        {% if guestadditions == "true" %}
+		"guest_additions_mode": "attach",
+        {% else %}
+		"guest_additions_mode": "disable",
+        {% endif %}
+		{# headless = true now due to issue #10. Will revisit later. #}
+		"headless": "true",
+		"communicator": "winrm",
+		"winrm_username": "{{ username }}",
+		"winrm_password": "{{ password }}",
+		"winrm_timeout": "60m",
+		"shutdown_command": "shutdown /s /f /t 10",
+        "vm_name": "{{ vm_name }}",
+        "keep_registered": "{{ keep_registered }}",
+        "post_shutdown_delay": "4m",
+        "skip_export": "{{ skip_export }}",
+		"vboxmanage": [
+			["modifyvm", "{{ '{{.Name}}' }}", "--memory", "{{ memory }}"],
+			["modifyvm", "{{ '{{.Name}}' }}", "--vram", "{{ vram }}"],
+			["modifyvm", "{{ '{{.Name}}' }}", "--cpus", "{{ cpus }}"],
+			["modifyvm", "{{ '{{.Name}}' }}", "--nic2", "hostonly"],
+			["modifyvm", "{{ '{{.Name}}' }}", "--hostonlyadapter2", "vboxnet0"],
+            [ "storageattach", "{{ '{{.Name}}' }}", "--storagectl", "IDE Controller", "--port", "1", "--device", "1", "--type", "dvddrive", "--medium", "emptydrive" ]
+            {% if hide_vm_artifacts == "true" %}
+			,["modifyvm", "{{ '{{.Name}}' }}", "--paravirtprovider", "none"],
+			["modifyvm", "{{ '{{.Name}}' }}", "--cpuidremoveall"],
+			["modifyvm", "{{ '{{.Name}}' }}", "--macaddress1", "{{ mac_address_nat }}"],
+			["modifyvm", "{{ '{{.Name}}' }}", "--macaddress2", "{{ mac_address_hostonly }}"]
+            {% endif %}
+		],
+		"boot_wait": "10s",
+		"disk_size": "{{ disk_size }}",
+		"output_directory": "builds"

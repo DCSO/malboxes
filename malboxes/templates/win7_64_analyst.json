@@ -1,0 +1,77 @@
+{
+    "builders": [{
+        "guest_os_type": "Windows7_64",
+        {% include 'snippets/builder_virtualbox_windows.json' %},
+
+        "iso_urls": "file://{{iso_dir}}/{{ win7_64_iso_name }}",
+        "iso_checksum": "{{ win7_64_checksum }}",
+        "iso_checksum_type": "sha1",
+
+        "floppy_files": [
+            "{{ cache_dir }}/Autounattend.xml",
+            {% if proxy %}"{{ dir }}/scripts/windows/refresh-proxy.ps1",{% endif %}
+            "{{ dir }}/installconfig/windows7_64/enablewinrm.ps1"
+        ]
+    }],
+
+    {% if skip_export == "false" %}
+    {% include 'snippets/postprocessor_vagrant.json' %},
+    {% endif %}
+
+    "provisioners": [
+
+        {% include 'snippets/provision_powershell_win7.json' %},
+
+        {
+            "type": "file",
+            "source": "{{ dir }}/templates/snippets/windows_sshd.config",
+            "destination":"$env:PROGRAMDATA\\ssh\\sshd_config"
+        },
+
+        {% if tools_path %}
+        {% include 'snippets/tools.json' %},
+        {% endif %}
+
+        {% if upload_execute %}
+        {% for exec_cmd_list in upload_execute %}
+        {% for cmd in exec_cmd_list %}
+        {{ cmd | tojson}},
+        {% endfor %}
+        {% endfor %}
+        {% endif %}
+
+        {% if upload_compile_execute %}
+        {% for exec_cmd_list in upload_compile_execute %}
+        {% for cmd in exec_cmd_list %}
+        {{ cmd | tojson}},
+        {% endfor %}
+        {% endfor %}
+        {% endif %}
+
+
+        {% if ida_path %}
+        {% include 'snippets/ida_remote_64.json' %},
+        {% include 'snippets/ida_remote_32.json' %},
+        {% endif %}
+
+        {% if flare_vm == "true" %}
+        {
+            "type": "powershell",
+            "environment_vars": [
+                "CHOCO_SOURCE={{ choco_source }}",
+                "FLARE_SOURCE={{ flare_source }}",
+                "USERNAME={{ username }}",
+                "PASSWORD={{ password }}"
+            ],
+            "scripts": [
+                "{{ dir }}/scripts/windows/flare_vm.ps1"
+            ]
+        },
+        {% endif %}
+
+        {
+            "type": "powershell",
+            "inline": [ "Write-Host Current Powershell version: $PSVersionTable.PSVersion.Major" ]
+        }
+    ]
+}

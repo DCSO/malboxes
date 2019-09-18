@@ -1,0 +1,33 @@
+# Our own stuff
+packer_cache/
+config_cache/
+boxes/
+builds/
+
+malboxes/test.sh
+.pip_packages/
+packer.nix
+result-bin
+.direnv/
+.envrc
+default.nix
+
+
+# Python
+__pycache__/
+
+# Python pip/setuptools packaging
+build/
+dist/
+*.egg-info/
+
+# Generic
+*~
+*.swp
+
+# Documentation artifacts
+README.html
+docs/*.html
+
+# IDE
+/.idea/
